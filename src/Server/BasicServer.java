@@ -1,7 +1,9 @@
 package Server;
 
+import FileService.Freemarker;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import freemarker.template.Configuration;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -14,6 +16,7 @@ import java.util.Objects;
 public class BasicServer {
     private final HttpServer server;
     private final String dataDir = "data";
+    private final static Configuration freemarker = Freemarker.initFreeMarker();
 
     //routes хранит путь запроса и обработчик, который выполнит действия
     private final Map<String, RouteHandler> routes = new HashMap<>();
