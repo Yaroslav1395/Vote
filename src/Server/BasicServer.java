@@ -4,8 +4,13 @@ import FileService.Freemarker;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -187,6 +192,38 @@ public class BasicServer {
     protected String getQueryParams(HttpExchange exchange) {
         String query = exchange.getRequestURI().getQuery();
         return Objects.nonNull(query) ? query : "";
+    }
+
+
+    protected void renderTemplate(HttpExchange exchange, String templateFile, Object dataModel) {
+        try {
+            // загружаем шаблон из файла по имени.
+            // шаблон должен находится по пути, указанном в конфигурации
+            Template temp = freemarker.getTemplate(templateFile);
+
+            // freemarker записывает преобразованный шаблон в объект класса writer
+            // а наш сервер отправляет клиенту массивы байт
+            // по этому нам надо сделать "мост" между этими двумя системами
+
+            // создаём поток который сохраняет всё, что в него будет записано в байтовый массив
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            // создаём объект, который умеет писать в поток и который подходит для freemarker
+            try (OutputStreamWriter writer = new OutputStreamWriter(stream)) {
+
+                // обрабатываем шаблон заполняя его данными из модели
+                // и записываем результат в объект "записи"
+                temp.process(dataModel, writer);
+                writer.flush();
+
+                // получаем байтовый поток
+                var data = stream.toByteArray();
+
+                // отправляем результат клиенту
+                sendByteData(exchange, ResponseCodes.OK, ContentType.TEXT_HTML, data);
+            }
+        } catch (IOException | TemplateException e) {
+            e.printStackTrace();
+        }
     }
 
     public final void start() {
