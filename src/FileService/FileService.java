@@ -7,7 +7,7 @@ import java.nio.file.Paths;
 
 public class FileService {
     //перед созданием экземпляра необходимо подключить библиотеку
-    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();//позволяет привести в читабельный вид
+    /*private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();//позволяет привести в читабельный вид
 
     public static Library readJsonFile(){
         Path parsedPath = Paths.get("data/gson/library.json");//преобразует String путь в Path путь
@@ -31,5 +31,5 @@ public class FileService {
         }catch (IOException e){
             e.printStackTrace();
         }
-    }
+    }*/
 }
