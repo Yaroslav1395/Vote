@@ -11,7 +11,7 @@ public class Freemarker {
         try {
             Configuration cfg = new Configuration(Configuration.VERSION_2_3_29);
 
-            cfg.setDirectoryForTemplateLoading(new File("data"));
+            cfg.setDirectoryForTemplateLoading(new File("data/html"));
 
             cfg.setDefaultEncoding("UTF-8");
             cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
