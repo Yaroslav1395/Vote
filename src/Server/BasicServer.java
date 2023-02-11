@@ -24,10 +24,15 @@ public class BasicServer {
     private final static Configuration freemarker = Freemarker.initFreeMarker();
 
     //routes хранит путь запроса и обработчик, который выполнит действия
-    private final Map<String, RouteHandler> routes = new HashMap<>();
+    public static final Map<String, RouteHandler> routes = new HashMap<>();
     protected BasicServer(String host, int port) throws IOException {
         server = createServer(host, port);
         registerAddressRequestWithHandlers();
+
+        registerFileHandler(".css", ContentType.TEXT_CSS);
+        registerFileHandler(".html", ContentType.TEXT_HTML);
+        registerFileHandler(".jpeg", ContentType.IMAGE_JPEG);
+        registerFileHandler(".png", ContentType.IMAGE_PNG);
     }
 
     private static HttpServer createServer(String host, int post) throws IOException{

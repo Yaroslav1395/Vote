@@ -12,7 +12,7 @@ public class Vote_Machine extends BasicServer {
     }
 
     private void freemarkerCandidatesHandler(HttpExchange exchange){
-        renderTemplate(exchange, "sample.html", getCandidatesModel());
+        renderTemplate(exchange, "candidates.html", getCandidatesModel());
     }
     private String getCandidatesModel(){
         return null;
