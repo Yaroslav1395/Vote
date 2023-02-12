@@ -29,10 +29,6 @@ public class BasicServer {
         server = createServer(host, port);
         registerAddressRequestWithHandlers();
 
-        registerFileHandler(".css", ContentType.TEXT_CSS);
-        registerFileHandler(".html", ContentType.TEXT_HTML);
-        registerFileHandler(".jpeg", ContentType.IMAGE_JPEG);
-        registerFileHandler(".png", ContentType.IMAGE_PNG);
     }
 
     private static HttpServer createServer(String host, int post) throws IOException{
@@ -58,7 +54,7 @@ public class BasicServer {
 
         registerFileHandler(".css", ContentType.TEXT_CSS);
         registerFileHandler(".html", ContentType.TEXT_HTML);
-        registerFileHandler(".jpg", ContentType.IMAGE_JPEG);
+        registerFileHandler(".jpeg", ContentType.IMAGE_JPEG);
         registerFileHandler(".png", ContentType.IMAGE_PNG);
 
     }
