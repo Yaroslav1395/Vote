@@ -1,0 +1,12 @@
+{
+  "users": [
+    {
+      "name": "Ярослав ",
+      "surname": "Сахно",
+      "password": "123qweasd",
+      "email": "sakhno.yaroslav.13.95@gmail.com",
+      "id": "sakhno.yaroslav.13.95@gmail.comЯрослав ",
+      "isVoted": false
+    }
+  ]
+}
