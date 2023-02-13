@@ -1,35 +1,37 @@
 package FileService;
 
+import Users.Users;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class FileService {
-    //перед созданием экземпляра необходимо подключить библиотеку
-    /*private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();//позволяет привести в читабельный вид
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-    public static Library readJsonFile(){
-        Path parsedPath = Paths.get("data/gson/library.json");//преобразует String путь в Path путь
+    public static Users readJsonFile(){
+        Path parsedPath = Paths.get("data/json/users.json");
         String fileContents;
         try {
-            fileContents = Files.readString(parsedPath);//Класс Files предоставляет возможность считать файлы
+            fileContents = Files.readString(parsedPath);
         }catch (IOException e){
             throw new RuntimeException(e);
         }
-        //библиотека Gson дает возможность записать данные в класс
-        //gson.fromJson(строка с данными из класса, Класс в который нужно записать)
-        return gson.fromJson(fileContents, Library.class);
+
+        return gson.fromJson(fileContents, Users.class);
     }
 
-    public static void writeJson(Library library){
-        String json = gson.toJson(library);//метод преобразует класс в строку для записи в json
-        Path parsedPath = Paths.get("data/gson/library.json");//преобразует String путь в Path путь
+    public static void writeJson(Users users){
+        String json = gson.toJson(users);
+        Path parsedPath = Paths.get("data/json/users.json");
         try {
-            byte[] bytes = json.getBytes();//для записи необходимо получить битовое значение строки
-            Files.write(parsedPath, bytes);//передаем путь к файлу типом данных Path и битовое значение строки
+            byte[] bytes = json.getBytes();
+            Files.write(parsedPath, bytes);
         }catch (IOException e){
             e.printStackTrace();
         }
-    }*/
+    }
 }
