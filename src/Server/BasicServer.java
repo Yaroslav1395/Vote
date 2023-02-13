@@ -8,15 +8,16 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import static java.util.stream.Collectors.joining;
 
 public class BasicServer {
     private final HttpServer server;
@@ -28,11 +29,6 @@ public class BasicServer {
     protected BasicServer(String host, int port) throws IOException {
         server = createServer(host, port);
         registerAddressRequestWithHandlers();
-
-        registerFileHandler(".css", ContentType.TEXT_CSS);
-        registerFileHandler(".html", ContentType.TEXT_HTML);
-        registerFileHandler(".jpeg", ContentType.IMAGE_JPEG);
-        registerFileHandler(".png", ContentType.IMAGE_PNG);
     }
 
     private static HttpServer createServer(String host, int post) throws IOException{
@@ -58,7 +54,7 @@ public class BasicServer {
 
         registerFileHandler(".css", ContentType.TEXT_CSS);
         registerFileHandler(".html", ContentType.TEXT_HTML);
-        registerFileHandler(".jpg", ContentType.IMAGE_JPEG);
+        registerFileHandler(".jpeg", ContentType.IMAGE_JPEG);
         registerFileHandler(".png", ContentType.IMAGE_PNG);
 
     }
@@ -122,27 +118,41 @@ public class BasicServer {
     protected final void registerFileHandler(String fileExt, ContentType type) {
         registerGet(fileExt, exchange -> sendFile(exchange, makeFilePath(exchange), type));
     }
-    //Метод принимает HttpExchange, путь к файлу, и тип передаваемого файла.
-    //Преобразует файл найденный по адресу в поток байт.
+
+
+    //Приоритет 2 -------------------------------------------------------------------------------------------------------
+    /**
+     * Метод проверит, существует ли файл по пути который передан в качестве параметра. Если пути нет, то отправит клиенту
+     * ответ с кодом 404. Если файл существует, то преобразует его в поток байт. Затем вызовет метод sendByteData()
+     * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
+     * @param pathToFile - путь к файлу который необходимо передать (файл по данному пути преобразется в байты)
+     * @param contentType - тип передаваемого контента (передается в метод sendByteData()).
+     */
     protected final void sendFile(HttpExchange exchange, Path pathToFile, ContentType contentType) {
         try {
-            //если такого пути нет ответом на запрос будет 404
             if (Files.notExists(pathToFile)) {
                 respond404(exchange);
                 return;
             }
-            //преобразует файл который, найдет по адресу в байты
+
             var data = Files.readAllBytes(pathToFile);
+
             sendByteData(exchange, ResponseCodes.OK, contentType, data);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    //метод отправляет данные клиенту принимая файл преобразованный в байты
-    //и указывает тип передаваемых данных принимая contentType(хранится в перечислении)
+
+    /**
+     * Метод откроет исходящий поток доступный у объекта HttpExchange.
+     * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
+     * @param responseCode - код для клиента, обозначающий статус ответа.
+     * @param contentType - тип передаваемого контента, указывающий клиенту, какой тип данных он будет принимать
+     * @param data - поток байт, который отправится в теле ответа
+     * @throws IOException - ошибка возникает, если невозможно получить тело ответа
+     */
     protected final void sendByteData(HttpExchange exchange, ResponseCodes responseCode,
                                       ContentType contentType, byte[] data) throws IOException {
-        //получаем исходящий поток для отправки
         try (var output = exchange.getResponseBody()) {
             setContentType(exchange, contentType);
             exchange.sendResponseHeaders(responseCode.getCode(), 0);
@@ -150,11 +160,22 @@ public class BasicServer {
             output.flush();
         }
     }
-    //примет объект HttpExchange и получит из него адрес запроса
+
+    /**
+     * Через объект HttpExchange получим доступ к заголовкам ответа и установим Content-Type
+     * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
+     * @param type - заголовок Content-Type обозначающий тип передаваемого контента
+     */
     private static void setContentType(HttpExchange exchange, ContentType type) {
         exchange.getResponseHeaders().set("Content-Type", String.valueOf(type));
     }
-    //преобразует строку в путь добавив к пути директорию
+
+    //Приоритет 1-----------------------------------------------------------------------------------------------
+    /**
+     * Поле dataDir хранит путь к папке, где содержатся все файлы html.
+     * @param s обозначает имя файла, путь к которому необходимо создать
+     * @return возвращает путь к файлу
+     */
     protected Path makeFilePath(String... s) {
         return Path.of(dataDir, s);
     }
@@ -162,6 +183,12 @@ public class BasicServer {
     private Path makeFilePath(HttpExchange exchange) {
         return makeFilePath(exchange.getRequestURI().getPath());
     }
+
+
+
+
+
+
 
 
     private void handleIndexIncomingServerRequests(HttpExchange exchange) {
@@ -229,6 +256,30 @@ public class BasicServer {
         } catch (IOException | TemplateException e) {
             e.printStackTrace();
         }
+    }
+
+
+
+
+
+
+
+    //Приоритет 3 --------------------------------------------------------------------------------------------
+    /**
+     * Получит из тела запроса входящий поток. Из входящего потока преобразует поток сырых байт
+     * в символы. Через BufferedReader считает построчно и соединит все в одну строку.
+     * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
+     * @return вернет тело запроса в виде строки.
+     */
+    protected String getBody(HttpExchange exchange){
+        InputStream input = exchange.getRequestBody();
+        InputStreamReader isr = new InputStreamReader(input, StandardCharsets.UTF_8);
+        try (BufferedReader reader = new BufferedReader(isr)){
+            return reader.lines().collect(joining(""));
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        return "";
     }
 
     public final void start() {
