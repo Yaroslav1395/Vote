@@ -5,8 +5,32 @@
       "surname": "Сахно",
       "password": "123qweasd",
       "email": "sakhno.yaroslav.13.95@gmail.com",
-      "id": "sakhno.yaroslav.13.95@gmail.comЯрослав ",
+      "id": "sakhno.yaroslav.13.95@gmail.com123qweasd",
+      "isVoted": true
+    },
+    {
+      "name": "Петров",
+      "surname": "Петр",
+      "password": "123йцуфыв",
+      "email": "asd.asd@asd",
+      "id": "",
       "isVoted": false
+    },
+    {
+      "name": "Ярослав ",
+      "surname": "Сахно",
+      "password": "123qweasd",
+      "email": "qwe.qwe@qwe",
+      "id": "",
+      "isVoted": true
+    },
+    {
+      "name": "Иван",
+      "surname": "Иванов",
+      "password": "123qweasd",
+      "email": "zxc.zxc.@zxc",
+      "id": "zxc.zxc.@zxcИван",
+      "isVoted": true
     }
   ]
 }

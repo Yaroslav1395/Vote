@@ -9,28 +9,37 @@
 
 <body>
     <div class="container flex flex-col align-center">
-    <h1>Vote for us</h1>
+        <h1>Vote for us</h1>
+        <#if isUserStatus() == false>
+            <h3>Зарегистрируйтесь для голосования</h3>
+        </#if>
     <main class="flex flex-wrap align-evenly">
-    <div class="card">
-      <form action="/vote" method="post" class="flex flex-col align-center" href="#">
-        <img src="../images/3.jpeg">
-        <p>name surname</p>
-        <input name="candidateId" type="hidden" value="candidate_id">
-        <button type="submit" class="vote flex align-center">Vote</button>
-      </form>
-    </div>
-        <div class="card">
-            <form action="/vote" method="post" class="flex flex-col align-center" href="#">
-                <img src="../images/4.jpeg">
-                <p>name surname</p>
-                <input name="candidateId" type="hidden" value="candidate_id">
-                <button type="submit" class="vote flex align-center">Vote</button>
-            </form>
-        </div>
+        <#list candidateList as candidate>
+            <div class="card">
+                <form action="/candidates" method="post" class="flex flex-col align-center" href="#">
+                    <img src="../images/${candidate.photo}">
+                    <p>${candidate.name}</p>
+                    <#assign candidateId = getIndexByName(candidate.name)>
+                    <#if isUserStatus() == true>
+                        <input name="candidateId" type="hidden" value="${candidateId}">
+                        <button type="submit" class="vote flex align-center">Vote</button>
+                    <#else>
+                        <div class="vote flex align-center">
+                            <input name="candidateId" type="hidden" value="${candidateId}">
+                            <button type="submit" class="vote flex align-center">Vote</button>
+                        </div>
+                    </#if>
+                </form>
+            </div>
+        </#list>
     </main>
     
       <p>-------------------------------------------------------</p>
       <a class="back flex align-center" href="/votes">Show total votes</a>
+       <p></p>
+      <#if isUserStatus() == false>
+        <a class="back flex align-center" href="/login">Authorization</a>
+      </#if>
     </div>
 </body>
 

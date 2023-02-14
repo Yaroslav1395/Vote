@@ -1,18 +1,13 @@
 package Users;
 
-import javax.crypto.SecretKey;
 
 public class User {
-    private String name;
-    private String surname;
-    private String password;
-    private String email;
+    private final String name;
+    private final String surname;
+    private final String password;
+    private final String email;
     private String id;
     private boolean isVoted;
-
-
-    public User() {
-    }
 
     public User(String name, String surname, String password, String email, String id) {
         this.name = name;

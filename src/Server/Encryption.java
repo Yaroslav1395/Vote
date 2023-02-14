@@ -52,6 +52,7 @@ public class Encryption {
      * @return - вернет дешифрованную строку
      */
     public static String decrypt(String forDecryption, SecretKey key){
+        if(forDecryption == null) return "";
         byte[] encodedBytes = Base64.getDecoder().decode(forDecryption);
         try {
             Cipher cipher = Cipher.getInstance("AES");
