@@ -22,7 +22,14 @@ public class Cookie<V> {
     this.maxAge = maxAge;
     this.httpOnly = true;
   }
-  
+
+  /**
+   * Метол проверяет на null значения name, value. Убирает пробелы name, и возвращает объект Cookie.
+   * @param name - название куки
+   * @param value - значение куки
+   * @param maxAge - время хранения
+   * @return - верен объект Cookie
+   */
   public static <V> Cookie make(String name, V value, Integer maxAge) {
     return new Cookie<>(name, value, maxAge);
   }
@@ -55,12 +62,30 @@ public class Cookie<V> {
     }
     return stringBuilder.toString();
   }
+
+  /**
+   * Преобразует строку куки в мапу, перед этим декодируя данные из MIME.
+   * @param cookiesString - куки в виде одной строки
+   * @return - верент мапу, в качестве ключа имя куки.
+   */
   public static Map<String, String> parse(String cookiesString){
     return Utils.parseUrlEncoded(cookiesString, "; ");
   }
+
+  /**
+   * Из заголовков запроса получит куки
+   * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
+   * @return - вернет куки в виде строки
+   */
   public static String getCookies(HttpExchange exchange){
     return exchange.getRequestHeaders().getOrDefault("Cookie", List.of("")).get(0);
   }
+
+  /**
+   * Добавить в заголовок ответа куки.
+   * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
+   * @param cookie - объект Cookie
+   */
   public static void setCookie(HttpExchange exchange, Cookie cookie) {
     exchange.getResponseHeaders().add("Set-Cookie", cookie.toString());
   }

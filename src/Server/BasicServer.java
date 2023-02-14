@@ -39,13 +39,10 @@ public class BasicServer {
         return HttpServer.create(addressSocket, 50);
     }
 
-    protected final Map<String, RouteHandler> getRoutes() {
-        return routes;
-    }
-
     /**
-     * метод определяет какой обработчик вызывать если в адресе корень.
-     *
+     * метод устанавливает контекст для сервера, по которому сервер будет определять, какой
+     * файл нужно отправить на запрос. Так же, регистрирует основные пути, для передачи файлов
+     * сss, html, jpeg, pnd и обработчик для корневого запроса /.
      */
     private void registerAddressRequestWithHandlers() {
         server.createContext("/", this::handleIndexIncomingServerRequests);
@@ -61,12 +58,36 @@ public class BasicServer {
 
 
     /**
-     * следующие методы создают ключ для мап, по ключу которой получаем обработчик
+     * Принимает адрес запроса и проверяет, начинается ли запрос с точки. Если да, то вернет адрес запроса,
+     * если нет, то проверит, начинается ли запрос с /. Если нет, то добавит к адресу запроса /. Метод необходим
+     * для проверки корректности адреса запроса.
+     * @param route - адрес запроса
+     * @return - вернет строку
      */
-    //Принимает объект HttpExchange, который содержит метод, адрес, тело запроса.
-    //Если адрес запроса кончается / и размер его больше 1, то уберет /.
-    //Если адрес содержит точку, то возьмет из адреса все что после нее,
-    //если нет, то оставит путь как есть и создаст ключ вернув его как строку
+    private static String ensureStartsWithSlash(String route){
+        if (route.startsWith("."))
+            return route;
+        return route.startsWith("/") ? route : "/" + route;
+    }
+    /**
+     * Принимает в качестве параметров метод запроса и адрес запроса, преобразуя их в
+     * строку, которая будет использоваться в качестве ключа.
+     * @param method - строковое представление метода, с которым клиент запрашивает данные
+     * @param route - адрес, по которому клиент запрашивает данные
+     * @return - вернет строку в виде - пример: Метод(GET/POST) адрес(/image.jpeg)
+     */
+    protected static String makeKey(String method, String route) {
+        route = ensureStartsWithSlash(route);
+        return String.format("%s %s", method.toUpperCase(), route);
+    }
+    /**
+     * Из объекта HttpExchange получает метод запроса и адрес запроса. Если в конце адреса запроса имеется
+     * / и его длина больше 1 (для проверки не просит ли клиент корневой файл), то уберет с конца /. Затем
+     * получит индекс ".". Если индекс "." не равен -1 - то есть "." есть, то обрежет адрес запроса от точки до
+     * конца, если нет, то оставит запрос как есть.
+     * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
+     * @return - вернет строку в виде Метод(GET/POST) адрес(/image.jpeg)
+     */
     private static String makeKey(HttpExchange exchange) {
         String method = exchange.getRequestMethod();
         String path = exchange.getRequestURI().getPath();
@@ -77,50 +98,67 @@ public class BasicServer {
         String extOrPath = index != -1 ? path.substring(index).toLowerCase() : path;
         return makeKey(method, extOrPath);
     }
-    //Метод возвращает готовый ключ, проверяя входные данные на корректность пути
-    protected static String makeKey(String method, String route) {
-        route = ensureStartsWithSlash(route);
-        return String.format("%s %s", method.toUpperCase(), route);
-    }
-    //Метод необходим для проверки, правильный путь передали в метод или нет.
-    //Проверит, начинается ли путь с точки, если да то вернет строку без изменений.
-    //Если путь не начинается с точки, то проверит, начинается ли с /, если да, то вернет путь.
-    //Если нет, то добавит в начало пути /.
-    private static String ensureStartsWithSlash(String route){
-        if (route.startsWith("."))
-            return route;
-        return route.startsWith("/") ? route : "/" + route;
-    }
-
 
     /**
-     * следующие методы нужны для добавления в мап ключа и обработчика
-     * registerGet отвечает за Get запросы
-     * registerPost отвечает за обработку Post запроса
+     * @return - возвращает мап, хранящий в качестве ключа Метод(GET/POST) адрес(/image.jpeg) и
+     * обработчик для данного ключа
+     */
+    protected final Map<String, RouteHandler> getRoutes() {
+        return routes;
+    }
+    /**
+     * Приняв параметры добавит в мап, хранящую в качестве ключа Метод(GET/POST) адрес(/image.jpeg) и
+     * обработчик для данного ключа, новую запись.
+     * @param method - строковое представление метода, с которым клиент запрашивает данные
+     * @param route - адрес запроса
+     * @param handler - обработчик
      */
     //метод создаст ключ и новую запись в мап, добавив ключ и обработчик
     protected final void registerGenericHandler(String method, String route, RouteHandler handler) {
         getRoutes().put(makeKey(method, route), handler);
     }
+
+    /**
+     * Создаст ключ в виде GET адрес, и установит обработчик в качестве значения
+     * @param route - адрес запроса
+     * @param handler - обработчик
+     */
     protected final void registerGet(String route, RouteHandler handler) {
         registerGenericHandler("GET", route, handler);
     }
+    /**
+     * Создаст ключ в виде POST адрес, и установит обработчик в качестве значения
+     * @param route - адрес запроса
+     * @param handler - обработчик
+     */
     protected final void registerPost(String route, RouteHandler handler) {
         registerGenericHandler("POST", route, handler);
     }
-
-
     /**
-     * Следующие методы необходимы для отправки ответа в случае если в запросе содержится путь к конкретному
-     * файлу.
+     * Через объект HttpExchange получим доступ к заголовкам ответа и установим Content-Type
+     * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
+     * @param type - заголовок Content-Type обозначающий тип передаваемого контента
      */
-    //поместит в мап расширение файла и обработчик который отправит файл
-    protected final void registerFileHandler(String fileExt, ContentType type) {
-        registerGet(fileExt, exchange -> sendFile(exchange, makeFilePath(exchange), type));
+    private static void setContentType(HttpExchange exchange, ContentType type) {
+        exchange.getResponseHeaders().set("Content-Type", String.valueOf(type));
     }
-
-
-    //Приоритет 2 -------------------------------------------------------------------------------------------------------
+    /**
+     * Метод откроет исходящий поток доступный у объекта HttpExchange.
+     * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
+     * @param responseCode - код для клиента, обозначающий статус ответа.
+     * @param contentType - тип передаваемого контента, указывающий клиенту, какой тип данных он будет принимать
+     * @param data - поток байт, который отправится в теле ответа
+     * @throws IOException - ошибка возникает, если невозможно получить тело ответа
+     */
+    protected final void sendByteData(HttpExchange exchange, ResponseCodes responseCode,
+                                      ContentType contentType, byte[] data) throws IOException {
+        try (var output = exchange.getResponseBody()) {
+            setContentType(exchange, contentType);
+            exchange.sendResponseHeaders(responseCode.getCode(), 0);
+            output.write(data);
+            output.flush();
+        }
+    }
     /**
      * Метод проверит, существует ли файл по пути который передан в качестве параметра. Если пути нет, то отправит клиенту
      * ответ с кодом 404. Если файл существует, то преобразует его в поток байт. Затем вызовет метод sendByteData()
@@ -142,35 +180,6 @@ public class BasicServer {
             e.printStackTrace();
         }
     }
-
-    /**
-     * Метод откроет исходящий поток доступный у объекта HttpExchange.
-     * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
-     * @param responseCode - код для клиента, обозначающий статус ответа.
-     * @param contentType - тип передаваемого контента, указывающий клиенту, какой тип данных он будет принимать
-     * @param data - поток байт, который отправится в теле ответа
-     * @throws IOException - ошибка возникает, если невозможно получить тело ответа
-     */
-    protected final void sendByteData(HttpExchange exchange, ResponseCodes responseCode,
-                                      ContentType contentType, byte[] data) throws IOException {
-        try (var output = exchange.getResponseBody()) {
-            setContentType(exchange, contentType);
-            exchange.sendResponseHeaders(responseCode.getCode(), 0);
-            output.write(data);
-            output.flush();
-        }
-    }
-
-    /**
-     * Через объект HttpExchange получим доступ к заголовкам ответа и установим Content-Type
-     * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
-     * @param type - заголовок Content-Type обозначающий тип передаваемого контента
-     */
-    private static void setContentType(HttpExchange exchange, ContentType type) {
-        exchange.getResponseHeaders().set("Content-Type", String.valueOf(type));
-    }
-
-    //Приоритет 1-----------------------------------------------------------------------------------------------
     /**
      * Поле dataDir хранит путь к папке, где содержатся все файлы html.
      * @param s адрес к файлу, который берется из запроса
@@ -189,88 +198,25 @@ public class BasicServer {
     private Path makeFilePath(HttpExchange exchange) {
         return makeFilePath(exchange.getRequestURI().getPath());
     }
+    /**
+     * Создаст новую запись в мапе, в виде ключа (GET .расширение файла) и установит обработчик,
+     * который отправит данные.
+     * @param fileExt - расширение файла
+     * @param type - тип передаваемых данных
+     */
+    protected final void registerFileHandler(String fileExt, ContentType type) {
+        registerGet(fileExt, exchange -> sendFile(exchange, makeFilePath(exchange), type));
+    }
 
-
-
-
-
-
-
-
+    /**
+     * Метод создает ключ из запроса для поиска обработчика. Если такой обработчик есть, то вызовется
+     * метод обработки, если нет, то отправит сообщение 404.
+     * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
+     */
     private void handleIndexIncomingServerRequests(HttpExchange exchange) {
         var route = getRoutes().getOrDefault(makeKey(exchange), this::respond404);
         route.handle(exchange);
     }
-
-
-    /**
-     * следующие методы обрабатывают ошибки 404 и переадресацию
-     */
-    private void respond404(HttpExchange exchange) {
-        try {
-            var data = "404 Not found".getBytes();
-            sendByteData(exchange, ResponseCodes.NOT_FOUND, ContentType.TEXT_PLAIN, data);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    protected void redirect303(HttpExchange exchange, String path){
-        try {
-            exchange.getResponseHeaders().add("Location", path);
-            exchange.sendResponseHeaders(303, 0);
-            exchange.getResponseBody().close();
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * предназначен для получения Query параметров в виде строки
-     */
-    protected String getQueryParams(HttpExchange exchange) {
-        String query = exchange.getRequestURI().getQuery();
-        return Objects.nonNull(query) ? query : "";
-    }
-
-
-    protected void renderTemplate(HttpExchange exchange, String templateFile, Object dataModel) {
-        try {
-            // загружаем шаблон из файла по имени.
-            // шаблон должен находится по пути, указанном в конфигурации
-            Template temp = freemarker.getTemplate(templateFile);
-
-            // freemarker записывает преобразованный шаблон в объект класса writer
-            // а наш сервер отправляет клиенту массивы байт
-            // по этому нам надо сделать "мост" между этими двумя системами
-
-            // создаём поток который сохраняет всё, что в него будет записано в байтовый массив
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            // создаём объект, который умеет писать в поток и который подходит для freemarker
-            try (OutputStreamWriter writer = new OutputStreamWriter(stream)) {
-
-                // обрабатываем шаблон заполняя его данными из модели
-                // и записываем результат в объект "записи"
-                temp.process(dataModel, writer);
-                writer.flush();
-
-                // получаем байтовый поток
-                var data = stream.toByteArray();
-
-                // отправляем результат клиенту
-                sendByteData(exchange, ResponseCodes.OK, ContentType.TEXT_HTML, data);
-            }
-        } catch (IOException | TemplateException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-
-
-
-
-
-    //Приоритет 3 --------------------------------------------------------------------------------------------
     /**
      * Получит из тела запроса входящий поток. Из входящего потока преобразует поток сырых байт
      * в символы. Через BufferedReader считает построчно и соединит все в одну строку.
@@ -287,7 +233,69 @@ public class BasicServer {
         }
         return "";
     }
+    /**
+     * В случае если по ключу в мапе ничего не найдено, то отправит ошибку 404
+     * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
+     */
+    private void respond404(HttpExchange exchange) {
+        try {
+            var data = "404 Not found".getBytes();
+            sendByteData(exchange, ResponseCodes.NOT_FOUND, ContentType.TEXT_PLAIN, data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
+    /**
+     * Метод устанавливает по какому пути необходимо осуществить переход.
+     * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
+     * @param path- путь, по которому будет произведен редирект.
+     */
+    protected void redirect303(HttpExchange exchange, String path){
+        try {
+            exchange.getResponseHeaders().add("Location", path);
+            exchange.sendResponseHeaders(303, 0);
+            exchange.getResponseBody().close();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Получает из HttpExchange Query параметрами и если они есть вернет их
+     * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
+     * @return венет строку с Query параметрами
+     */
+    protected String getQueryParams(HttpExchange exchange) {
+        String query = exchange.getRequestURI().getQuery();
+        return Objects.nonNull(query) ? query : "";
+    }
+
+    /**
+     * Метод загрузит шаблон из файла переданного в параметры. Создает поток который, сохраняет всё, что в него
+     * будет записано в байтовый массив. Создаем поток, который умеет записывать. Обрабатываем шаблон заполняя
+     * его данными. Отправляем клиенту.
+     * @param exchange - объект HttpExchange хранящий заголовки, методы, и тело(запроса, ответа).
+     * @param templateFile - название файла, который нужно обработать.
+     * @param dataModel - объект из которого будут браться данные для заполнения.
+     */
+    protected void renderTemplate(HttpExchange exchange, String templateFile, Object dataModel) {
+        try {
+
+            Template temp = freemarker.getTemplate(templateFile);
+
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+            try (OutputStreamWriter writer = new OutputStreamWriter(stream)) {
+                temp.process(dataModel, writer);
+                writer.flush();
+                var data = stream.toByteArray();
+                sendByteData(exchange, ResponseCodes.OK, ContentType.TEXT_HTML, data);
+            }
+        } catch (IOException | TemplateException e) {
+            e.printStackTrace();
+        }
+    }
     public final void start() {
         server.start();
     }

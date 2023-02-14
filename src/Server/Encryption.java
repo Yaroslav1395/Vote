@@ -4,10 +4,8 @@ import javax.crypto.*;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+
 
 public class Encryption {
     public static SecretKey key = makeKey();

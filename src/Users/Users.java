@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Users {
-    private List<User> users = new ArrayList<>();
+    private final List<User> users = new ArrayList<>();
 
     /**
      * Метод для поиска пользователя в списке и возврата его копии
@@ -50,7 +50,7 @@ public class Users {
      * Если параметры пустые, вернет false.
      * @param userEmail - для поиска пользователя
      * @param decodedId - для сравнения
-     * @return
+     * @return - если пользователь с таким email есть, вернет true
      */
     public boolean checkIdByEmail(String userEmail, String decodedId){
         if(userEmail == null || decodedId == null) return false;
