@@ -1,8 +1,34 @@
-[
-  { "name": "Markus Sillman", "photo" : "1.jpeg" },
-  { "name": "Nikita Culler", "photo" : "2.jpeg" },
-  { "name": "Tawanna Melanson", "photo" : "3.jpeg" },
-  { "name": "Brunilda Mikels", "photo" : "4.jpeg" },
-  { "name": "Hubert Takahashi", "photo" : "5.jpeg" },
-  { "name": "Hershel Caffrey", "photo" : "6.jpeg" }
-]
+{
+  "candidateList": [
+    {
+      "name": "Markus Sillman",
+      "photo": "1.jpeg",
+      "voteCount": 1
+    },
+    {
+      "name": "Nikita Culler",
+      "photo": "2.jpeg",
+      "voteCount": 2
+    },
+    {
+      "name": "Tawanna Melanson",
+      "photo": "3.jpeg",
+      "voteCount": 0
+    },
+    {
+      "name": "Brunilda Mikels",
+      "photo": "4.jpeg",
+      "voteCount": 0
+    },
+    {
+      "name": "Hubert Takahashi",
+      "photo": "5.jpeg",
+      "voteCount": 0
+    },
+    {
+      "name": "Hershel Caffrey",
+      "photo": "6.jpeg",
+      "voteCount": 0
+    }
+  ]
+}

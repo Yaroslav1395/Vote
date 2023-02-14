@@ -1,5 +1,7 @@
 package Users;
 
+import Server.Encryption;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +46,23 @@ public class Users {
     }
 
     /**
+     * Найдет пользователя по email, и проверяет его id, перед проверкой декодирует.
+     * Если параметры пустые, вернет false.
+     * @param userEmail - для поиска пользователя
+     * @param decodedId - для сравнения
+     * @return
+     */
+    public boolean checkIdByEmail(String userEmail, String decodedId){
+        if(userEmail == null || decodedId == null) return false;
+        for (User user: users) {
+            if(user.getEmail().equals(userEmail)){
+                return user.getId().equals(decodedId);
+            }
+        }
+        return false;
+    }
+
+    /**
      *
      * @param userEmail - для сравнения в списке всех пользователей
      * @return вернет id найденного пользователя или пустую строку
@@ -64,13 +83,40 @@ public class Users {
      */
     public void setIdByEmail(String id, String userEmail){
         for (User user: users) {
-            if(user.getId().equals(userEmail)){
+            if(user.getEmail().equals(userEmail)){
                 user.setId(id);
                 break;
             }
         }
     }
 
+    /**
+     * Установит статус голоса найдя пользователя по email
+     * @param userEmail - для поиска
+     */
+    public void setIsVotedStatusToUserWithEmail(String userEmail){
+        for (User user: users) {
+            if(user.getEmail().equals(userEmail)){
+                user.setVoted(true);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Метод проверяет, голосовал пользователь или нет. Если userEmail пустой, вернет true.
+     * @param userEmail - для поиска пользователя
+     * @return - возвращает false если не голосовал
+     */
+    public boolean checkVoidStatusByEmail(String userEmail){
+        if(userEmail == null) return true;
+        for (User user: users) {
+            if(user.getEmail().equals(userEmail)){
+                return user.isVoted();
+            }
+        }
+        return true;
+    }
     /**
      * Добавит нового пользователя
      * @param user - пользователь которого нужно добавить
